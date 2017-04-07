@@ -69,7 +69,9 @@ for i_raw, img_raw_fn in enumerate(img_list):
         #   col 0 -> nx_AP(raw nz): lateral 0 (raw 0) -> lateral z (raw nz)
         #   z   0 -> nz_AP(raw nx): anterior -> posterior
         img_AP_i[:, i_raw] = img_raw[:, i_AP]
-        io.imsave(i_AP_path, img_AP_i)
+        # compress with zlib when saving, ref:
+        # http://scikit-image.org/docs/dev/api/skimage.external.tifffile.html#skimage.external.tifffile.TiffWriter
+        io.imsave(i_AP_path, img_AP_i, compress=6)
     
     # D-V
     for i_DV in xrange(nz_DV):
@@ -86,4 +88,6 @@ for i_raw, img_raw_fn in enumerate(img_list):
         #   col 0 -> nx_DV(raw nx): anterior -> posterior
         #   z   0 -> nz_DV(raw ny): dorsal -> ventral
         img_DV_i[i_raw, :] = img_raw[i_DV, :]
-        io.imsave(i_DV_path, img_DV_i)
+        # compress with zlib when saving, ref:
+        # http://scikit-image.org/docs/dev/api/skimage.external.tifffile.html#skimage.external.tifffile.TiffWriter
+        io.imsave(i_DV_path, img_DV_i, compress=6)
