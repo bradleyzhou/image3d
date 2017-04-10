@@ -58,7 +58,7 @@ for i_raw, img_raw_fn in enumerate(img_list):
     # A-P
     for i_AP in xrange(nz_AP):
         # print('AP image %d' % i_AP)
-        i_AP_path = os.path.join(out_path_AP, 'AP-%04d.tif' % i_AP)
+        i_AP_path = os.path.join(out_path_AP, 'AP-%05d.tif' % i_AP)
         if os.path.exists(i_AP_path) and os.path.isfile(i_AP_path):
             img_AP_i = io.imread(i_AP_path)
         else:
@@ -76,7 +76,7 @@ for i_raw, img_raw_fn in enumerate(img_list):
     # D-V
     for i_DV in xrange(nz_DV):
         # print('DV image %d' % i_DV)
-        i_DV_path = os.path.join(out_path_DV, 'DV-%04d.tif' % i_DV)
+        i_DV_path = os.path.join(out_path_DV, 'DV-%05d.tif' % i_DV)
         if os.path.exists(i_DV_path) and os.path.isfile(i_DV_path):
             img_DV_i = io.imread(i_DV_path)
         else:
