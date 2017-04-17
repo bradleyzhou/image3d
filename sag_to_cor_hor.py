@@ -2,14 +2,18 @@
 
 ## Convert sagittal sections to coronal and horizontal sections
 
-import skimage
-from skimage import io
-import numpy as np
 import os
 import re
+import sys
+import string
+import random
+import socket
 import logging
 import argparse
-import sys
+from datetime import datetime
+import numpy as np
+import skimage
+from skimage import io
 
 # Argument parsing
 description = '''
@@ -57,6 +61,13 @@ if not os.path.exists(out_path):
     os.mkdir(out_path)
 
 # Setup logging
+def generateId(size=6, chars=string.ascii_uppercase + string.digits):
+    # Generate random string, with current timestamp
+    nowDt = datetime.now()
+    dtString = nowDt.strftime("%Y%m%d%H%M%S")
+    randString = ''.join(random.choice(chars) for _ in range(size))
+    return dtString + randString
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -67,7 +78,8 @@ ch.setLevel(logging.DEBUG)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-fh = logging.FileHandler(os.path.join(out_path, '%s.log' % __name__))
+hostname = socket.gethostname()
+fh = logging.FileHandler(os.path.join(out_path, '%s-%s-%s.log' % (hostname, __name__, generateId())))
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
