@@ -7,6 +7,7 @@ from skimage import io
 import numpy as np
 import os
 import re
+import logging
 
 raw_path = '/Users/bradleyzhou/Projects/image3d/t1-head'
 out_path = '/Users/bradleyzhou/Projects/image3d/try2'
@@ -14,6 +15,24 @@ out_path = '/Users/bradleyzhou/Projects/image3d/try2'
 if not os.path.exists(out_path):
     os.mkdir(out_path)
 
+# Setup logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('[%(asctime)s][%(name)s][%(levelname)s] %(message)s')
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+fh = logging.FileHandler(os.path.join(out_path, '%s.log' % __name__))
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+# Prepare sorted list of images
+logger.info('Getting and sorting list of TIFF images. Assumes as saggital sections.')
 img_list = [img for img in os.listdir(raw_path) if re.search(r'\d+[.][tT][iI][fF]', img)]
 
 def catchSerial(s):
@@ -28,6 +47,7 @@ img_list.sort(key=catchSerial)
 nz = len(img_list)
 
 # probe one single image for image dimensions and types
+logger.info('Probing one image for image dimensions and types')
 probe_fn = os.path.join(raw_path, img_list[0])
 probe_img = io.imread(probe_fn)
 
@@ -37,10 +57,15 @@ data_type = probe_img.dtype
 
 # Coronal sections, 'AP', anterior - posterior
 nx_AP, ny_AP, nz_AP = (nz, ny, nx)
+logger.info('Calculated dimensions for coronal(A-P) sections: x: %d, y: %d, and %d sections.',
+            (nx_AP, ny_AP, nz_AP))
 
 # Horizontal sections, 'DV', dorsal - ventral
 nx_DV, ny_DV, nz_DV = (nx, nz, ny)
+logger.info('Calculated dimensions for horizontal(D-V) sections: x: %d, y: %d, and %d sections.',
+            (nx_DV, ny_DV, nz_DV))
 
+logger.info('Preparing output paths')
 out_path_AP = os.path.join(out_path, 'AP')
 out_path_DV = os.path.join(out_path, 'DV')
 
@@ -50,14 +75,15 @@ if not os.path.exists(out_path_AP):
 if not os.path.exists(out_path_DV):
     os.mkdir(out_path_DV)
 
+logger.info('Generating re-sliced images')
 for i_raw, img_raw_fn in enumerate(img_list):
-    print('Raw image %d' % i_raw)
+    logger.info('Reading raw image %d' % i_raw)
     img_raw_path = os.path.join(raw_path, img_raw_fn)
     img_raw = io.imread(img_raw_path)
     
     # A-P
     for i_AP in xrange(nz_AP):
-        # print('AP image %d' % i_AP)
+        logger.info('For raw image %d, processing AP image %d' % (i_raw, i_AP))
         i_AP_path = os.path.join(out_path_AP, 'AP-%05d.tif' % i_AP)
         if os.path.exists(i_AP_path) and os.path.isfile(i_AP_path):
             img_AP_i = io.imread(i_AP_path)
@@ -71,11 +97,12 @@ for i_raw, img_raw_fn in enumerate(img_list):
         img_AP_i[:, i_raw] = img_raw[:, i_AP]
         # compress with zlib when saving, ref:
         # http://scikit-image.org/docs/dev/api/skimage.external.tifffile.html#skimage.external.tifffile.TiffWriter
+        logger.info('Writing AP image %d' % i_AP)
         io.imsave(i_AP_path, img_AP_i, compress=6)
     
     # D-V
     for i_DV in xrange(nz_DV):
-        # print('DV image %d' % i_DV)
+        logger.info('For raw image %d, processing DV image %d' % (i_raw, i_DV))
         i_DV_path = os.path.join(out_path_DV, 'DV-%05d.tif' % i_DV)
         if os.path.exists(i_DV_path) and os.path.isfile(i_DV_path):
             img_DV_i = io.imread(i_DV_path)
@@ -90,4 +117,5 @@ for i_raw, img_raw_fn in enumerate(img_list):
         img_DV_i[i_raw, :] = img_raw[i_DV, :]
         # compress with zlib when saving, ref:
         # http://scikit-image.org/docs/dev/api/skimage.external.tifffile.html#skimage.external.tifffile.TiffWriter
+        logger.info('Writing DV image %d' % i_DV)
         io.imsave(i_DV_path, img_DV_i, compress=6)
