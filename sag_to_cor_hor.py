@@ -14,7 +14,7 @@ import sys
 # Argument parsing
 description = '''
   Convert sagittal sections to coronal and horizontal sections.
-  Example: `ssh-all hosts.list "uname -a"`
+  Example: `python script.py AP 0 129`
 '''
 parser = argparse.ArgumentParser(description=description)
 direction_help = '''
@@ -33,6 +33,10 @@ endi_help = '''
     for batch processing.
 '''
 parser.add_argument('endi', type=int, help=endi_help)
+raw_path_help = "Path of raw TIFF images, with numbered filenames."
+parser.add_argument('-i', '--raw-path', help=raw_path_help, required=True)
+out_path_help = "Path for all the generated image outputs."
+parser.add_argument('-o', '--out-path', help=out_path_help, required=True)
 
 args = parser.parse_args(sys.argv[1:])
 
@@ -44,8 +48,10 @@ if starti > endi:
     starti, endi = endi, starti
 
 # Path
-raw_path = '/Users/bradleyzhou/Projects/image3d/t1-head'
-out_path = '/Users/bradleyzhou/Projects/image3d/try2'
+# raw_path = '/Users/bradleyzhou/Projects/image3d/t1-head'
+# out_path = '/Users/bradleyzhou/Projects/image3d/try2'
+raw_path = args.raw_path
+out_path = args.out_path
 
 if not os.path.exists(out_path):
     os.mkdir(out_path)
