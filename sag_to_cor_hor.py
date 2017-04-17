@@ -75,47 +75,55 @@ if not os.path.exists(out_path_AP):
 if not os.path.exists(out_path_DV):
     os.mkdir(out_path_DV)
 
-logger.info('Generating re-sliced images')
-for i_raw, img_raw_fn in enumerate(img_list):
-    logger.info('Reading raw image %d' % i_raw)
-    img_raw_path = os.path.join(raw_path, img_raw_fn)
-    img_raw = io.imread(img_raw_path)
+logger.info('Generating re-sliced images AP(coronal)')
+for i_AP in xrange(nz_AP):
+    logger.info('Generating AP image %d' % i_AP)
+
+    i_AP_path = os.path.join(out_path_AP, 'AP-%05d.tif' % i_AP)
+    if os.path.exists(i_AP_path) and os.path.isfile(i_AP_path):
+        img_AP_i = io.imread(i_AP_path)
+    else:
+        img_AP_i = np.zeros((ny_AP, nx_AP), dtype=data_type)
     
-    # A-P
-    for i_AP in xrange(nz_AP):
-        logger.info('For raw image %d, processing AP image %d' % (i_raw, i_AP))
-        i_AP_path = os.path.join(out_path_AP, 'AP-%05d.tif' % i_AP)
-        if os.path.exists(i_AP_path) and os.path.isfile(i_AP_path):
-            img_AP_i = io.imread(i_AP_path)
-        else:
-            img_AP_i = np.zeros((ny_AP, nx_AP), dtype=data_type)
+    for i_raw, img_raw_fn in enumerate(img_list):
+        img_raw_path = os.path.join(raw_path, img_raw_fn)
+        img_raw = io.imread(img_raw_path)
         
+        logger.info('Re-adapting raw image %d to AP image %d' % (i_raw, i_AP))
         # The result AP(coronal) image: (row 0, col 0) is top-left
         #   row 0 -> ny_AP(raw ny): dorsal -> ventral
         #   col 0 -> nx_AP(raw nz): lateral 0 (raw 0) -> lateral z (raw nz)
         #   z   0 -> nz_AP(raw nx): anterior -> posterior
         img_AP_i[:, i_raw] = img_raw[:, i_AP]
-        # compress with zlib when saving, ref:
-        # http://scikit-image.org/docs/dev/api/skimage.external.tifffile.html#skimage.external.tifffile.TiffWriter
-        logger.info('Writing AP image %d' % i_AP)
-        io.imsave(i_AP_path, img_AP_i, compress=6)
     
-    # D-V
-    for i_DV in xrange(nz_DV):
-        logger.info('For raw image %d, processing DV image %d' % (i_raw, i_DV))
-        i_DV_path = os.path.join(out_path_DV, 'DV-%05d.tif' % i_DV)
-        if os.path.exists(i_DV_path) and os.path.isfile(i_DV_path):
-            img_DV_i = io.imread(i_DV_path)
-        else:
-            img_DV_i = np.zeros((ny_DV, nx_DV), dtype=data_type)
+    logger.info('Writing AP image %d' % i_AP)
+    # compress with zlib when saving, ref:
+    # http://scikit-image.org/docs/dev/api/skimage.external.tifffile.html#skimage.external.tifffile.TiffWriter
+    io.imsave(i_AP_path, img_AP_i, compress=6)
+
+logger.info('Generating re-sliced images DV(horizontal)')
+for i_DV in xrange(nz_DV):
+    logger.info('Generating DV image %d' % i_DV)
+
+    i_DV_path = os.path.join(out_path_DV, 'DV-%05d.tif' % i_DV)
+    if os.path.exists(i_DV_path) and os.path.isfile(i_DV_path):
+        img_DV_i = io.imread(i_DV_path)
+    else:
+        img_DV_i = np.zeros((ny_DV, nx_DV), dtype=data_type)
+    
+    for i_raw, img_raw_fn in enumerate(img_list):
+        img_raw_path = os.path.join(raw_path, img_raw_fn)
+        img_raw = io.imread(img_raw_path)
         
+        logger.info('Re-adapting raw image %d to DV image %d' % (i_raw, i_DV))
         # img_DV_i[ny_DV - i_raw - 1, :] = img_raw[i_DV, :]
         # The result DV(horizontal) image: (row 0, col 0) is top-left
         #   row 0 -> ny_DV(raw nz): lateral 0 (raw 0) -> lateral z (raw nz)
         #   col 0 -> nx_DV(raw nx): anterior -> posterior
         #   z   0 -> nz_DV(raw ny): dorsal -> ventral
         img_DV_i[i_raw, :] = img_raw[i_DV, :]
-        # compress with zlib when saving, ref:
-        # http://scikit-image.org/docs/dev/api/skimage.external.tifffile.html#skimage.external.tifffile.TiffWriter
-        logger.info('Writing DV image %d' % i_DV)
-        io.imsave(i_DV_path, img_DV_i, compress=6)
+    
+    logger.info('Writing DV image %d' % i_DV)
+    # compress with zlib when saving, ref:
+    # http://scikit-image.org/docs/dev/DVi/skimage.external.tifffile.html#skimage.external.tifffile.TiffWriter
+    io.imsave(i_DV_path, img_DV_i, compress=6)
